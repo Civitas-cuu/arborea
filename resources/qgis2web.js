@@ -187,12 +187,12 @@ function createPopupField(currentFeature, currentFeatureKeys, layer) {
 if (currentFeatureKeys[i] === 'PDF') {
     var pdf = currentFeature.get('PDF');
     popupField += (pdf != null && pdf !== ''
-        ? '<a href="' + pdf + '" target="_blank" style="display:inline-block;padding:6px 12px;background:#2E7D32;color:#fff;text-decoration:none;border-radius:4px;font-weight:bold;"> Abrir plano</a>'
-        : 'Sin archivo');
+        ? '<a href="' + pdf + '" target="_blank" style="display:inline-block;padding:6px 12px;background:#2E7D32;color:#fff;text-decoration:none;border-radius:4px;font-weight:bold;">Abrir plano</a></td>'
+        : 'Sin archivo</td>');
 } else if (layer.get('fieldImages')[currentFeatureKeys[i]] != "ExternalResource") {
     popupField += (currentFeature.get(currentFeatureKeys[i]) != null
         ? autolinker.link(currentFeature.get(currentFeatureKeys[i]).toLocaleString())
-        : '');
+        : '') + '</td>';
 } else {
 				var fieldValue = currentFeature.get(currentFeatureKeys[i]);
 				if (/\.(gif|jpg|jpeg|tif|tiff|png|avif|webp|svg)$/i.test(fieldValue)) {
