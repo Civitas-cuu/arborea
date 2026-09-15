@@ -185,20 +185,22 @@ function createPopupField(currentFeature, currentFeatureKeys, layer) {
                 layer.get('fieldLabels')[currentFeatureKeys[i]] == "header label - visible with data") {
                 popupField += '<strong>' + layer.get('fieldAliases')[currentFeatureKeys[i]] + '</strong><br />';
             }
-            if (layer.get('fieldImages')[currentFeatureKeys[i]] != "ExternalResource") {
-				popupField += (currentFeature.get(currentFeatureKeys[i]) != null ? autolinker.link(currentFeature.get(currentFeatureKeys[i]).toLocaleString()) + '</td>' : '');
-			} else {
-				var fieldValue = currentFeature.get(currentFeatureKeys[i]);
-				if (/\.(gif|jpg|jpeg|tif|tiff|png|avif|webp|svg)$/i.test(fieldValue)) {
-					popupField += (fieldValue != null ? '<img src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" /></td>' : '');
-				} else if (/\.(mp4|webm|ogg|avi|mov|flv)$/i.test(fieldValue)) {
-					popupField += (fieldValue != null ? '<video controls><source src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" type="video/mp4">Il tuo browser non supporta il tag video.</video></td>' : '');
-				} else if (/\.(mp3|wav|ogg|aac|flac)$/i.test(fieldValue)) {
-                    popupField += (fieldValue != null ? '<audio controls><source src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" type="audio/mpeg">Il tuo browser non supporta il tag audio.</audio></td>' : '');
-                } else {
-					popupField += (fieldValue != null ? autolinker.link(fieldValue.toLocaleString()) + '</td>' : '');
-				}
-			}
+            if (currentFeatureKeys[i] === 'PDF') {
+    var pdf = currentFeature.get('PDF');
+    popupField += (pdf != null && pdf !== ''
+        ? '<a href="' + pdf + '" target="_blank" style="display:inline-block;padding:6px 12px;background:#2E7D32;color:#fff;text-decoration:none;border-radius:4px;font-weight:bold;"> Abrir plano</a></td>'
+        : 'Sin archivo</td>');
+} else if (layer.get('fieldImages')[currentFeatureKeys[i]] != "ExternalResource") {
+    popupField += (currentFeature.get(currentFeatureKeys[i]) != null ?
+        autolinker.link(currentFeature.get(currentFeatureKeys[i]).toLocaleString()) + '</td>' : '');
+} else {
+    var fieldValue = currentFeature.get(currentFeatureKeys[i]);
+    if (/\.(gif|jpg|jpeg|tif|tiff|png|avif|webp|svg)$/i.test(fieldValue)) {
+        popupField += (fieldValue != null ? '<img src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" /></td>' : '');
+    } else {
+        popupField += (fieldValue != null ? autolinker.link(fieldValue.toLocaleString()) + '</td>' : '');
+    }
+}
             popupText += '<tr>' + popupField + '</tr>';
         }
     }
