@@ -152,7 +152,7 @@ var featureOverlay = new ol.layer.Vector({
     updateWhileInteracting: true // optional, for instant visual feedback
 });
 
-var doHighlight = true;
+var doHighlight = false;
 var doHover = false;
 
 function createPopupField(currentFeature, currentFeatureKeys, layer) {
@@ -519,20 +519,15 @@ var bottomRightContainerDiv = document.getElementById('bottom-right-container')
 	map.getTargetElement().appendChild(geolocateControl);
 
 	const accuracyFeature = new ol.Feature();
-	const positionFeature = new ol.Feature();
-
-positionFeature.setStyle(
-  new ol.style.Style({
-    image: new ol.style.Circle({
-      radius: 7,
-      fill: new ol.style.Fill({ color: '#1E88E5' }),
-      stroke: new ol.style.Stroke({
-        color: '#FFFFFF',
-        width: 3
-      })
-    })
-  })
-);
+	const positionFeature = new ol.Feature({
+	  style: new ol.style.Style({
+		image: new ol.style.Circle({
+		  radius: 6,
+		  fill: new ol.style.Fill({ color: '#3399CC' }),
+		  stroke: new ol.style.Stroke({ color: '#fff', width: 2 }),
+		}),
+	  }),
+	});
 
   const geolocateOverlay = new ol.layer.Vector({
 	  source: new ol.source.Vector({
