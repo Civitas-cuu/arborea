@@ -156,6 +156,12 @@ var doHighlight = false;
 var doHover = false;
 
 function createPopupField(currentFeature, currentFeatureKeys, layer) {
+
+    // Mover PDF al final del popup
+    const pdfIndex = currentFeatureKeys.indexOf('PDF');
+    if (pdfIndex > -1) {
+        currentFeatureKeys.push(currentFeatureKeys.splice(pdfIndex, 1)[0]);
+    }
     var popupText = '';
     for (var i = 0; i < currentFeatureKeys.length; i++) {
         if (currentFeatureKeys[i] != 'geometry' &&
