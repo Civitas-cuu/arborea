@@ -154,9 +154,7 @@ var featureOverlay = new ol.layer.Vector({
 
 var doHighlight = false;
 var doHover = false;
-
 function createPopupField(currentFeature, currentFeatureKeys, layer) {
-
     // Mover PDF al final del popup
     const pdfIndex = currentFeatureKeys.indexOf('PDF');
     if (pdfIndex > -1) {
