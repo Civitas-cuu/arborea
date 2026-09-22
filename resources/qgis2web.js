@@ -156,53 +156,89 @@ var doHighlight = false;
 var doHover = false;
 
 function createPopupField(currentFeature, currentFeatureKeys, layer) {
+
+    // Ordenar: PDF siempre al final y ATRIBUTOS antes del PDF
+    currentFeatureKeys = currentFeatureKeys.filter(function(k){
+        return k !== 'ATRIBUTOS' && k !== 'PDF';
+    });
+
+    if (currentFeature.get('ATRIBUTOS')) currentFeatureKeys.push('ATRIBUTOS');
+    if (currentFeature.get('PDF')) currentFeatureKeys.push('PDF');
+
     var popupText = '';
+
     for (var i = 0; i < currentFeatureKeys.length; i++) {
-        if (currentFeatureKeys[i] != 'geometry' &&
-            currentFeatureKeys[i] != 'layerObject' &&
-            currentFeatureKeys[i] != 'idO' &&
-            currentFeatureKeys[i] != '_mvtLayer_') {
-            var popupField = '';
-            if (layer.get('fieldLabels')[currentFeatureKeys[i]] == "hidden field") {
-                continue;
-            } else if (layer.get('fieldLabels')[currentFeatureKeys[i]] == "inline label - visible with data") {
-                if (currentFeature.get(currentFeatureKeys[i]) == null) {
-                    continue;
-                }
-            }
-            if (layer.get('fieldLabels')[currentFeatureKeys[i]] == "inline label - always visible" ||
-                layer.get('fieldLabels')[currentFeatureKeys[i]] == "inline label - visible with data") {
-                popupField += '<th>' + layer.get('fieldAliases')[currentFeatureKeys[i]] + '</th><td>';
-            } else {
-                popupField += '<td colspan="2">';
-            }
-            if (layer.get('fieldLabels')[currentFeatureKeys[i]] == "header label - visible with data") {
-                if (currentFeature.get(currentFeatureKeys[i]) == null) {
-                    continue;
-                }
-            }
-            if (layer.get('fieldLabels')[currentFeatureKeys[i]] == "header label - always visible" ||
-                layer.get('fieldLabels')[currentFeatureKeys[i]] == "header label - visible with data") {
-                popupField += '<strong>' + layer.get('fieldAliases')[currentFeatureKeys[i]] + '</strong><br />';
-            }
-            if (layer.get('fieldImages')[currentFeatureKeys[i]] != "ExternalResource") {
-				popupField += (currentFeature.get(currentFeatureKeys[i]) != null ? autolinker.link(currentFeature.get(currentFeatureKeys[i]).toLocaleString()) + '</td>' : '');
-			} else {
-				var fieldValue = currentFeature.get(currentFeatureKeys[i]);
-				if (/\.(gif|jpg|jpeg|tif|tiff|png|avif|webp|svg)$/i.test(fieldValue)) {
-					popupField += (fieldValue != null ? '<img src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" /></td>' : '');
-				} else if (/\.(mp4|webm|ogg|avi|mov|flv)$/i.test(fieldValue)) {
-					popupField += (fieldValue != null ? '<video controls><source src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" type="video/mp4">Il tuo browser non supporta il tag video.</video></td>' : '');
-				} else if (/\.(mp3|wav|ogg|aac|flac)$/i.test(fieldValue)) {
-                    popupField += (fieldValue != null ? '<audio controls><source src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" type="audio/mpeg">Il tuo browser non supporta il tag audio.</audio></td>' : '');
-                } else {
-					popupField += (fieldValue != null ? autolinker.link(fieldValue.toLocaleString()) + '</td>' : '');
-				}
-			}
-            popupText += '<tr>' + popupField + '</tr>';
+
+        var key = currentFeatureKeys[i];
+
+        if (key == 'geometry' || key == 'layerObject' || key == 'idO' || key == '_mvtLayer_') continue;
+
+        if (layer.get('fieldLabels')[key] == "hidden field") continue;
+
+        if (layer.get('fieldLabels')[key] == "inline label - visible with data" &&
+            currentFeature.get(key) == null) continue;
+
+        var alias = layer.get('fieldAliases')[key];
+        var value = currentFeature.get(key);
+
+        var popupField = '<th>' + alias + '</th><td>';
+
+        // -------- SUPERFICIE --------
+        if (key == 'SUP_M2') {
+
+            var num = parseFloat(value);
+            popupField += isNaN(num) ? value : num.toFixed(2);
+
         }
+
+        // -------- ATRIBUTOS --------
+        else if (key == 'ATRIBUTOS') {
+
+            if (value) {
+
+                var badges = value.toString().split('|').map(function(item){
+
+                    return '<span style="display:inline-block;background:#2563EB;color:#fff;padding:4px 8px;margin:2px;border-radius:12px;font-size:11px;font-weight:600;">'
+                    + item.trim() +
+                    '</span>';
+
+                }).join('');
+
+                popupField += badges;
+
+            }
+
+        }
+
+        // -------- PDF --------
+        else if (key == 'PDF') {
+
+            if (value) {
+
+                popupField += '<a href="./' + value +
+                '" target="_blank" style="display:inline-block;background:#16A34A;color:white;padding:8px 12px;border-radius:6px;text-decoration:none;font-weight:600;"> Abrir plano</a>';
+
+            }
+
+        }
+
+        // -------- CAMPOS NORMALES --------
+        else {
+
+            popupField += value != null
+                ? autolinker.link(value.toLocaleString())
+                : '';
+
+        }
+
+        popupField += '</td>';
+
+        popupText += '<tr>' + popupField + '</tr>';
+
     }
+
     return popupText;
+
 }
 
 var highlight;
