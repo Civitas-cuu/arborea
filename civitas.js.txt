@@ -1,0 +1,78 @@
+// CIVITAS WebMap v1.2
+// Funciones permanentes para qgis2web
+
+(function () {
+
+    const originalCreatePopup = window.createPopupField;
+
+    if (!originalCreatePopup) return;
+
+    window.createPopupField = function (feature, keys, layer) {
+
+        // Mover ATRIBUTOS y PDF al final
+        keys = keys.filter(k => k !== 'ATRIBUTOS' && k !== 'PDF');
+
+        if (feature.get('ATRIBUTOS')) keys.push('ATRIBUTOS');
+        if (feature.get('PDF')) keys.push('PDF');
+
+        let html = '';
+
+        keys.forEach(function (k) {
+
+            if (['geometry','layerObject','idO','_mvtLayer_'].includes(k)) return;
+
+            const value = feature.get(k);
+            if (value === null || value === '') return;
+
+            const alias = layer.get('fieldAliases')[k] || k;
+
+            let content = '';
+
+            if (k === 'SUP_M2') {
+
+                const n = Number(value);
+                content = isNaN(n) ? value : n.toFixed(2);
+
+            } else if (k === 'ATRIBUTOS') {
+
+                content = value.toString().split('|').map(function (t) {
+                    return `<span style="
+                        display:inline-block;
+                        background:#1565C0;
+                        color:white;
+                        padding:4px 8px;
+                        margin:2px;
+                        border-radius:12px;
+                        font-size:11px;
+                        font-weight:600;">${t.trim()}</span>`;
+                }).join(' ');
+
+            } else if (k === 'PDF') {
+
+                content = `<a href="${value}" target="_blank"
+                    style="
+                    background:#16A34A;
+                    color:white;
+                    text-decoration:none;
+                    padding:8px 12px;
+                    border-radius:6px;
+                    font-weight:bold;
+                    display:inline-block;">
+                    📄 Abrir plano
+                </a>`;
+
+            } else {
+
+                content = value;
+
+            }
+
+            html += `<tr><th>${alias}</th><td>${content}</td></tr>`;
+
+        });
+
+        return html;
+
+    };
+
+})();
