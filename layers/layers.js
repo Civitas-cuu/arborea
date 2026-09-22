@@ -1,5 +1,5 @@
 ol.proj.proj4.register(proj4);
-//ol.proj.get("EPSG:3857").setExtent([-11818814.698285, 3331886.684647, -11818171.150962, 3332335.794027]);
+//ol.proj.get("EPSG:3857").setExtent([-11819301.849870, 3331751.423470, -11818014.755226, 3332649.642228]);
 var wms_layers = [];
 
 
@@ -38,9 +38,9 @@ var lyr_ARBOREA_1 = new ol.layer.Vector({
 
 lyr_Googlesatellite_0.setVisible(true);lyr_ARBOREA_1.setVisible(true);
 var layersList = [lyr_Googlesatellite_0,lyr_ARBOREA_1];
-lyr_ARBOREA_1.set('fieldAliases', {'fid': 'fid', 'FRACC': 'Fraccionamiento', 'ETAPA': 'Etapa', 'MANZANA': 'Manzana', 'LOTE': 'Lote', 'SUPERFICIE': 'Superficie (m²)', 'USO': 'Uso', 'PDF': 'Plano catastral', 'SUP_M2': 'Superficie m²', });
-lyr_ARBOREA_1.set('fieldImages', {'fid': 'TextEdit', 'FRACC': 'TextEdit', 'ETAPA': 'TextEdit', 'MANZANA': 'TextEdit', 'LOTE': 'TextEdit', 'SUPERFICIE': 'TextEdit', 'USO': 'TextEdit', 'PDF': 'TextEdit', 'SUP_M2': 'TextEdit', });
-lyr_ARBOREA_1.set('fieldLabels', {'fid': 'hidden field', 'FRACC': 'inline label - visible with data', 'ETAPA': 'inline label - visible with data', 'MANZANA': 'inline label - visible with data', 'LOTE': 'inline label - visible with data', 'SUPERFICIE': 'hidden field', 'USO': 'hidden field', 'PDF': 'inline label - visible with data', 'SUP_M2': 'inline label - visible with data', });
+lyr_ARBOREA_1.set('fieldAliases', {'fid': 'fid', 'FRACC': 'Fraccionamiento', 'ETAPA': 'Etapa', 'MANZANA': 'Manzana', 'LOTE': 'Lote', 'SUPERFICIE': 'Superficie (m²)', 'USO': 'Uso', 'PDF': 'Plano catastral', 'SUP_M2': 'Superficie m²', 'ATRIBUTOS': 'Atributos', });
+lyr_ARBOREA_1.set('fieldImages', {'fid': 'TextEdit', 'FRACC': 'TextEdit', 'ETAPA': 'TextEdit', 'MANZANA': 'TextEdit', 'LOTE': 'TextEdit', 'SUPERFICIE': 'TextEdit', 'USO': 'TextEdit', 'PDF': 'TextEdit', 'SUP_M2': 'TextEdit', 'ATRIBUTOS': 'TextEdit', });
+lyr_ARBOREA_1.set('fieldLabels', {'fid': 'hidden field', 'FRACC': 'inline label - visible with data', 'ETAPA': 'inline label - visible with data', 'MANZANA': 'inline label - visible with data', 'LOTE': 'inline label - visible with data', 'SUPERFICIE': 'hidden field', 'USO': 'hidden field', 'PDF': 'inline label - visible with data', 'SUP_M2': 'inline label - visible with data', 'ATRIBUTOS': 'inline label - visible with data', });
 lyr_ARBOREA_1.on('precompose', function(evt) {
     evt.context.globalCompositeOperation = 'normal';
 });

@@ -17,7 +17,7 @@ var map = new ol.Map({
 });
 
 //initial view - epsg:3857 coordinates if not "Match project CRS"
-map.getView().fit([-11819063.177956, 3331715.296583, -11817776.083311, 3332613.515341], map.getSize());
+map.getView().fit([-11819301.849870, 3331751.423470, -11818014.755226, 3332649.642228], map.getSize());
 
 //change cursor
 function pointerOnFeature(evt) {
@@ -154,12 +154,8 @@ var featureOverlay = new ol.layer.Vector({
 
 var doHighlight = false;
 var doHover = false;
+
 function createPopupField(currentFeature, currentFeatureKeys, layer) {
-    // Mover PDF al final del popup
-    const pdfIndex = currentFeatureKeys.indexOf('PDF');
-    if (pdfIndex > -1) {
-        currentFeatureKeys.push(currentFeatureKeys.splice(pdfIndex, 1)[0]);
-    }
     var popupText = '';
     for (var i = 0; i < currentFeatureKeys.length; i++) {
         if (currentFeatureKeys[i] != 'geometry' &&
@@ -189,22 +185,20 @@ function createPopupField(currentFeature, currentFeatureKeys, layer) {
                 layer.get('fieldLabels')[currentFeatureKeys[i]] == "header label - visible with data") {
                 popupField += '<strong>' + layer.get('fieldAliases')[currentFeatureKeys[i]] + '</strong><br />';
             }
-            if (currentFeatureKeys[i] === 'PDF') {
-    var pdf = currentFeature.get('PDF');
-    popupField += (pdf != null && pdf !== ''
-        ? '<a href="' + pdf + '" target="_blank" style="display:inline-block;padding:6px 12px;background:#2E7D32;color:#fff;text-decoration:none;border-radius:4px;font-weight:bold;"> Abrir plano</a></td>'
-        : 'Sin archivo</td>');
-} else if (layer.get('fieldImages')[currentFeatureKeys[i]] != "ExternalResource") {
-    popupField += (currentFeature.get(currentFeatureKeys[i]) != null ?
-        autolinker.link(currentFeature.get(currentFeatureKeys[i]).toLocaleString()) + '</td>' : '');
-} else {
-    var fieldValue = currentFeature.get(currentFeatureKeys[i]);
-    if (/\.(gif|jpg|jpeg|tif|tiff|png|avif|webp|svg)$/i.test(fieldValue)) {
-        popupField += (fieldValue != null ? '<img src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" /></td>' : '');
-    } else {
-        popupField += (fieldValue != null ? autolinker.link(fieldValue.toLocaleString()) + '</td>' : '');
-    }
-}
+            if (layer.get('fieldImages')[currentFeatureKeys[i]] != "ExternalResource") {
+				popupField += (currentFeature.get(currentFeatureKeys[i]) != null ? autolinker.link(currentFeature.get(currentFeatureKeys[i]).toLocaleString()) + '</td>' : '');
+			} else {
+				var fieldValue = currentFeature.get(currentFeatureKeys[i]);
+				if (/\.(gif|jpg|jpeg|tif|tiff|png|avif|webp|svg)$/i.test(fieldValue)) {
+					popupField += (fieldValue != null ? '<img src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" /></td>' : '');
+				} else if (/\.(mp4|webm|ogg|avi|mov|flv)$/i.test(fieldValue)) {
+					popupField += (fieldValue != null ? '<video controls><source src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" type="video/mp4">Il tuo browser non supporta il tag video.</video></td>' : '');
+				} else if (/\.(mp3|wav|ogg|aac|flac)$/i.test(fieldValue)) {
+                    popupField += (fieldValue != null ? '<audio controls><source src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" type="audio/mpeg">Il tuo browser non supporta il tag audio.</audio></td>' : '');
+                } else {
+					popupField += (fieldValue != null ? autolinker.link(fieldValue.toLocaleString()) + '</td>' : '');
+				}
+			}
             popupText += '<tr>' + popupField + '</tr>';
         }
     }
@@ -525,20 +519,15 @@ var bottomRightContainerDiv = document.getElementById('bottom-right-container')
 	map.getTargetElement().appendChild(geolocateControl);
 
 	const accuracyFeature = new ol.Feature();
-	const positionFeature = new ol.Feature();
-
-positionFeature.setStyle(
-  new ol.style.Style({
-    image: new ol.style.Circle({
-      radius: 7,
-      fill: new ol.style.Fill({ color: '#1E88E5' }),
-      stroke: new ol.style.Stroke({
-        color: '#FFFFFF',
-        width: 3
-      })
-    })
-  })
-);
+	const positionFeature = new ol.Feature({
+	  style: new ol.style.Style({
+		image: new ol.style.Circle({
+		  radius: 6,
+		  fill: new ol.style.Fill({ color: '#3399CC' }),
+		  stroke: new ol.style.Stroke({ color: '#fff', width: 2 }),
+		}),
+	  }),
+	});
 
   const geolocateOverlay = new ol.layer.Vector({
 	  source: new ol.source.Vector({
