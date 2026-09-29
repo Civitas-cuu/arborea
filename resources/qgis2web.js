@@ -17,7 +17,7 @@ var map = new ol.Map({
 });
 
 //initial view - epsg:3857 coordinates if not "Match project CRS"
-map.getView().fit([385543.019471, 3170304.851292, 386480.845314, 3170959.327455], map.getSize());
+map.getView().fit([385534.886945, 3170295.549766, 386328.019886, 3170849.049766], map.getSize());
 
 //change cursor
 function pointerOnFeature(evt) {
@@ -157,75 +157,186 @@ var doHover = false;
 
 function createPopupField(currentFeature, currentFeatureKeys, layer) {
 
-    // CIVITAS MASTER v1.1
-    // SUP_M2 = 2 decimales
-    // ATRIBUTOS = badges azules
-    // PDF = boton verde al final
+    // =========================================================
+    // CIVITAS MASTER v1.1 - POPUPS
+    // =========================================================
+    //
+    // HABITACIONAL:
+    // Fraccionamiento
+    // Etapa
+    // Manzana
+    // Lote
+    // Superficie m²
+    // Atributos
+    // Plano catastral
+    //
+    // NO HABITACIONAL:
+    // Fraccionamiento
+    // Uso
+    //
+    // BANQUETAS:
+    // Respeta los campos ocultos configurados en QGIS.
+    //
+    // SUP_M2  -> 2 decimales
+    // ATRIBUTOS -> badges azules
+    // PDF -> botón verde "Abrir plano"
+    // PDF y ATRIBUTOS siempre al final
+    // =========================================================
 
-    currentFeatureKeys = currentFeatureKeys.filter(function(k){
+
+    var fieldLabels = layer.get('fieldLabels') || {};
+    var fieldAliases = layer.get('fieldAliases') || {};
+    var fieldImages = layer.get('fieldImages') || {};
+
+
+    // =========================================================
+    // IDENTIFICAR SI ES CAPA HABITACIONAL
+    // =========================================================
+
+    var esHabitacional =
+        fieldLabels['LOTE'] != 'hidden field' ||
+        fieldLabels['MANZANA'] != 'hidden field' ||
+        fieldLabels['ETAPA'] != 'hidden field' ||
+        fieldLabels['SUP_M2'] != 'hidden field' ||
+        fieldLabels['PDF'] != 'hidden field' ||
+        fieldLabels['ATRIBUTOS'] != 'hidden field';
+
+
+    // =========================================================
+    // ORDEN DE CAMPOS
+    // =========================================================
+    // ATRIBUTOS y PDF se sacan de su posición original
+    // y se colocan al final.
+
+    currentFeatureKeys = currentFeatureKeys.filter(function(k) {
         return k !== 'ATRIBUTOS' && k !== 'PDF';
     });
 
-    if (currentFeature.get('ATRIBUTOS')) {
+
+    if (currentFeature.get('ATRIBUTOS') &&
+        fieldLabels['ATRIBUTOS'] != 'hidden field') {
+
         currentFeatureKeys.push('ATRIBUTOS');
     }
 
-    if (currentFeature.get('PDF')) {
+
+    if (currentFeature.get('PDF') &&
+        fieldLabels['PDF'] != 'hidden field') {
+
         currentFeatureKeys.push('PDF');
     }
 
+
     var popupText = '';
+
+
+    // =========================================================
+    // RECORRER CAMPOS
+    // =========================================================
 
     for (var i = 0; i < currentFeatureKeys.length; i++) {
 
         var key = currentFeatureKeys[i];
 
+
+        // -----------------------------------------------------
+        // CAMPOS INTERNOS DE QGIS2WEB
+        // -----------------------------------------------------
+
         if (key == 'geometry' ||
             key == 'layerObject' ||
             key == 'idO' ||
             key == '_mvtLayer_') {
+
             continue;
         }
 
-        // Respetar los campos ocultos configurados en QGIS
-        if (layer.get('fieldLabels')[key] == "hidden field") {
+
+        // -----------------------------------------------------
+        // CAMPOS OCULTOS
+        // -----------------------------------------------------
+
+        if (fieldLabels[key] == "hidden field") {
             continue;
         }
 
-        if (layer.get('fieldLabels')[key] == "inline label - visible with data" &&
-            currentFeature.get(key) == null) {
-            continue;
-        }
 
-        var alias = layer.get('fieldAliases')[key];
         var value = currentFeature.get(key);
+
+
+        // =====================================================
+        // CAPAS NO HABITACIONALES
+        // =====================================================
+        // Solo mostrar FRACC y USO.
+
+        if (!esHabitacional &&
+            key !== 'FRACC' &&
+            key !== 'USO') {
+
+            continue;
+        }
+
+
+        // -----------------------------------------------------
+        // CAMPOS "VISIBLE WITH DATA"
+        // -----------------------------------------------------
+
+        if (
+            (fieldLabels[key] == "inline label - visible with data" ||
+             fieldLabels[key] == "header label - visible with data") &&
+            (value === null ||
+             value === undefined ||
+             value === '')
+        ) {
+
+            continue;
+        }
+
+
+        var alias = fieldAliases[key] || key;
+
         var popupField = '';
 
-        if (layer.get('fieldLabels')[key] == "inline label - always visible" ||
-            layer.get('fieldLabels')[key] == "inline label - visible with data") {
 
-            popupField += '<th>' + alias + '</th><td>';
+        // =====================================================
+        // FORMATO DE ETIQUETA
+        // =====================================================
+
+        if (
+            fieldLabels[key] == "inline label - always visible" ||
+            fieldLabels[key] == "inline label - visible with data"
+        ) {
+
+            popupField +=
+                '<th>' + alias + '</th><td>';
 
         } else {
 
-            popupField += '<td colspan="2">';
+            popupField +=
+                '<td colspan="2">';
 
         }
 
-        if (layer.get('fieldLabels')[key] == "header label - visible with data") {
-            if (value == null) {
-                continue;
-            }
+
+        // =====================================================
+        // HEADER
+        // =====================================================
+
+        if (
+            fieldLabels[key] == "header label - always visible" ||
+            fieldLabels[key] == "header label - visible with data"
+        ) {
+
+            popupField +=
+                '<strong>' + alias + '</strong><br />';
+
         }
 
-        if (layer.get('fieldLabels')[key] == "header label - always visible" ||
-            layer.get('fieldLabels')[key] == "header label - visible with data") {
 
-            popupField += '<strong>' + alias + '</strong><br />';
+        // =====================================================
+        // SUPERFICIE m²
+        // =====================================================
 
-        }
-
-        // -------- SUPERFICIE --------
         if (key == 'SUP_M2') {
 
             var num = parseFloat(value);
@@ -238,80 +349,195 @@ function createPopupField(currentFeature, currentFeatureKeys, layer) {
 
         }
 
-        // -------- ATRIBUTOS --------
+
+        // =====================================================
+        // ATRIBUTOS
+        // =====================================================
+
         else if (key == 'ATRIBUTOS') {
 
             if (value) {
 
                 var badges = value.toString().split('|').map(function(item) {
 
-                    return '<span style="display:inline-block;background:#1565C0;color:#fff;padding:4px 8px;margin:2px;border-radius:12px;font-size:11px;font-weight:600;">'
-                        + item.trim() +
+                    return '<span style="' +
+                        'display:inline-block;' +
+                        'background:#2563EB;' +
+                        'color:#fff;' +
+                        'padding:4px 8px;' +
+                        'margin:2px;' +
+                        'border-radius:12px;' +
+                        'font-size:11px;' +
+                        'font-weight:600;">' +
+                        item.trim() +
                         '</span>';
 
                 }).join('');
 
+
                 popupField += badges;
             }
+
 
             popupField += '</td>';
 
         }
 
-        // -------- PDF --------
+
+        // =====================================================
+        // PDF
+        // =====================================================
+
         else if (key == 'PDF') {
 
             if (value) {
 
-                popupField += '<a href="' + value +
-                    '" target="_blank" style="display:inline-block;background:#16A34A;color:white;padding:8px 12px;border-radius:6px;text-decoration:none;font-weight:600;">Abrir plano</a>';
+                var pdfValue = value.toString().trim();
 
+                var pdfHref = pdfValue;
+
+
+                // Si la ruta es relativa, agregar ./
+                if (
+                    !/^([a-z]+:)?\/\//i.test(pdfHref) &&
+                    pdfHref.indexOf('./') !== 0 &&
+                    pdfHref.indexOf('/') !== 0
+                ) {
+
+                    pdfHref = './' + pdfHref;
+                }
+
+
+                popupField +=
+                    '<a href="' + pdfHref +
+                    '" target="_blank" rel="noopener noreferrer" ' +
+                    'style="' +
+                    'display:inline-block;' +
+                    'background:#16A34A;' +
+                    'color:white;' +
+                    'padding:8px 12px;' +
+                    'border-radius:6px;' +
+                    'text-decoration:none;' +
+                    'font-weight:600;">' +
+                    'Abrir plano' +
+                    '</a>';
             }
+
 
             popupField += '</td>';
 
         }
 
-        // -------- CAMPOS NORMALES --------
-        else if (layer.get('fieldImages')[key] != "ExternalResource") {
 
-            popupField += value != null
-                ? autolinker.link(value.toLocaleString()) + '</td>'
-                : '</td>';
+        // =====================================================
+        // IMAGEN / VIDEO / AUDIO
+        // =====================================================
 
-        } else {
+        else if (fieldImages[key] == "ExternalResource") {
 
             var fieldValue = value;
 
-            if (/\.(gif|jpg|jpeg|tif|tiff|png|avif|webp|svg)$/i.test(fieldValue)) {
 
-                popupField += fieldValue != null
-                    ? '<img src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" /></td>'
-                    : '</td>';
+            if (fieldValue != null) {
 
-            } else if (/\.(mp4|webm|ogg|avi|mov|flv)$/i.test(fieldValue)) {
+                var mediaValue = fieldValue.toString();
 
-                popupField += fieldValue != null
-                    ? '<video controls><source src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" type="video/mp4">Il tuo browser non supporta il tag video.</video></td>'
-                    : '</td>';
 
-            } else if (/\.(mp3|wav|ogg|aac|flac)$/i.test(fieldValue)) {
+                // IMAGEN
+                if (
+                    /\.(gif|jpg|jpeg|tif|tiff|png|avif|webp|svg)$/i
+                    .test(mediaValue)
+                ) {
 
-                popupField += fieldValue != null
-                    ? '<audio controls><source src="images/' + fieldValue.replace(/[\\\/:]/g, '_').trim() + '" type="audio/mpeg">Il tuo browser non supporta il tag audio.</audio></td>'
-                    : '</td>';
+                    popupField +=
+                        '<img src="images/' +
+                        mediaValue
+                            .replace(/[\\\/:]/g, '_')
+                            .trim() +
+                        '" /></td>';
+
+                }
+
+
+                // VIDEO
+                else if (
+                    /\.(mp4|webm|ogg|avi|mov|flv)$/i
+                    .test(mediaValue)
+                ) {
+
+                    popupField +=
+                        '<video controls>' +
+                        '<source src="images/' +
+                        mediaValue
+                            .replace(/[\\\/:]/g, '_')
+                            .trim() +
+                        '" type="video/mp4">' +
+                        'Tu navegador no soporta el tag video.' +
+                        '</video></td>';
+
+                }
+
+
+                // AUDIO
+                else if (
+                    /\.(mp3|wav|ogg|aac|flac)$/i
+                    .test(mediaValue)
+                ) {
+
+                    popupField +=
+                        '<audio controls>' +
+                        '<source src="images/' +
+                        mediaValue
+                            .replace(/[\\\/:]/g, '_')
+                            .trim() +
+                        '" type="audio/mpeg">' +
+                        'Tu navegador no soporta el tag audio.' +
+                        '</audio></td>';
+
+                }
+
+
+                // OTRO RECURSO
+                else {
+
+                    popupField +=
+                        autolinker.link(
+                            mediaValue.toLocaleString()
+                        ) +
+                        '</td>';
+                }
 
             } else {
 
-                popupField += fieldValue != null
-                    ? autolinker.link(fieldValue.toLocaleString()) + '</td>'
-                    : '</td>';
-
+                popupField += '</td>';
             }
+
         }
 
-        popupText += '<tr>' + popupField + '</tr>';
+
+        // =====================================================
+        // CAMPOS NORMALES
+        // =====================================================
+
+        else {
+
+            popupField +=
+                value != null
+                    ? autolinker.link(
+                        value.toLocaleString()
+                    )
+                    : '';
+
+            popupField += '</td>';
+        }
+
+
+        popupText +=
+            '<tr>' +
+            popupField +
+            '</tr>';
     }
+
 
     return popupText;
 }
